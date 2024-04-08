@@ -8,82 +8,83 @@ from collections import defaultdict
 ### INIT ###
 
 keyboard_chars = "qwertyuiopasdfghjkl'zxcvbnm,.-QWERTYUIOPASDFGHJKL\"ZXCVBNM<>_"
+initial_temp = None
 
 # Penalties
-tg_p = [
-    1.0,
-    1.0,
-    1.0000000102102182,
-    -2.1016308706867277,
-    10.313611463019928,
-    7.690132310321646,
-    3.6046218804847463,
-    -2.40775104239068,
-    2.7971512270644574,
-    1.4346995043031492,
-    14.841662543111768,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
-    1.0,
+bg_p = [
+    -10.19678276162647,
+    -1179.0613003960643,
+    246.02207765401943,
+    1.7186522863710194,
+    -1.7699560981871376,
+    1.0000000087907441,
+    -0.2637714852272568,
+    0.9331156235873356,
+    1.0000000674928333,
+    -0.7525869566812889,
+    0.513800450167749,
+    0.9999999927914545,
+    -0.20955789357372712,
+    -0.1796771304083805,
+    1.0000000436534657,
+    0.22014160610220573,
+    0.22998836813196952,
+    0.22662244432651354,
+    0.21911454417089654,
+    0.039235112685932196,
+    0.13388700884922194,
+    0.11191010271394765,
+    0.11024559343977976,
+    -0.03981032640352075,
+    0.7249293300076389,
+    0.712154090865753,
+    0.3231876389916068,
+    0.16650158112367827,
+    0.48686912032016083,
+    0.4083777334535654,
+    0.35201940047875224,
+    1.0000000706795045,
+    1.0000000944318517,
+    1.0000000205057422,
+    1.0000001093930724,
+    0.999999953183365,
+    1.0000000266195677,
+    0.9999999188338375,
+    0.9999999687823709,
+    1.0000001022160196,
+    0.9999999903865717,
+    1.0000000587007343,
+    1.000000072624475,
+    0.00736760323601355,
+    0.9999999386675675,
+    10.219895036578272,
 ]
 
 
-bg_p = [
-    -10.300437125600473,
-    -1642.9346782045966,
-    250.29055874449554,
-    1.0950990814078618,
-    -1.6887582824251037,
-    1.000000019547364,
-    -0.26598860617770287,
-    1.0681331348399665,
-    0.9999999834871871,
-    -0.2851032381361033,
-    0.19817726955962967,
-    0.9999999611808169,
-    -0.3121306382645282,
-    -0.28403284008704166,
-    0.9999999999389337,
-    0.3238312010352593,
-    0.336672986553846,
-    0.33218545046838965,
-    0.3236488928048248,
-    0.02421578484708868,
-    0.15249404511102613,
-    0.1214709042010299,
-    0.12211245588015388,
-    -0.06988203056350295,
-    0.6116903979996243,
-    0.5900425571498125,
-    0.2626787173607642,
-    0.4088201158750971,
-    1.152372145539701,
-    0.9605459343034942,
-    0.8287624123864489,
-    0.9999999585951099,
-    1.0000000607724768,
-    1.0000000136653995,
-    1.0000000341101225,
-    1.0000000409788892,
-    0.9999999743087522,
-    0.9999999731524938,
-    0.9999999410759218,
-    1.0000000382887186,
-    0.9999999633782,
-    0.9999999955633581,
-    1.000000008442152,
-    0.008040665843636463,
-    0.9999999552424983,
-    9.271723577427458,
+tg_p = [
+    1.0,
+    1.0,
+    0.9999999935388235,
+    1.7888743974564612,
+    14.289826535757532,
+    10.91326118761467,
+    0.26613523684253015,
+    -6.929279801925972,
+    -0.7217759301897082,
+    -2.2170523968260927,
+    15.421807432803462,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
 ]
 
 
 # getting trigrams and their frequencies
 trigrams, tg_freqs = [], []
 tg_percentages = {}
-tg_coverage = 95  # the percentage of tg's to use
+tg_coverage = 100  # the percentage of tg's to use
 
 with open("trigrams.txt") as f:
     valid_c = "qwertyuiopasdfghjkl'zxcvbnm,.-"
@@ -105,7 +106,6 @@ with open("trigrams.txt") as f:
 # trimming our tg data to the amount of data we'll actually be processing
 tg_freqs = np.array(tg_freqs[: tg_percentages[tg_coverage]])
 trigrams = trigrams[: tg_percentages[tg_coverage]]
-bg_times = {}
 print("Processed trigram data")
 
 
@@ -127,6 +127,7 @@ sg_sfs = np.zeros(data_size)
 
 # getting bigrams and their frequencies and storing it as a dict
 bigram_to_freq = defaultdict(int)
+bigram_times = {}
 
 with open("bigrams.txt") as f:
     for k, v in (l.split("\t") for l in f):
@@ -141,31 +142,50 @@ class optimizer:
         self.cooling_schedule = "default"
         self.keyboard = keyboard(keyboard_chars)
         self.classifier = classifier()
-        self.bg_scores = {bg: 0 for bg in self.keyboard.get_ngrams(2)}
-        self.new_bg_scores = {}
+        self.affected_indices = range(data_size)
         self.fitness = 0
         self.prev_fitness = 0
-        self.a = 0.99
+        self.a = 0.995
+        self.bg_times = {}
 
         self.get_fitness()
         self.accept()
 
-        self.temp = self.get_initial_temperature(0.8, 0.01)
+        if initial_temp == None:
+            self.temp = self.get_initial_temperature(0.65, 0.01)
+        else:
+            self.temp = initial_temp
         self.stopping_point = self.get_stopping_point()
 
+    def swap(self, k1=None, k2=None):
+        if k1 != None and k2 != None:
+            self.keyboard.swap(k1, k2)
+        else:
+            self.keyboard.random_swap()
+
+        self.affected_indices = [
+            i
+            for i, tg in enumerate(trigrams)
+            if any([c in self.keyboard.swap_pair for c in tg])
+        ]
+
+        self.get_fitness()
+
     def accept(self):
-        self.bg_scores.update(self.new_bg_scores)
+        # self.bg_scores.update(self.new_bg_scores)
+        pass
 
     def reject(self):
         self.keyboard.undo_swap()
+        self.update_trigram_times()
         self.fitness = self.prev_fitness
-        self.new_bg_scores = {}
 
     def get_initial_temperature(self, x0, epsilon):
+        global initial_temp
         print("getting initial temperature")
 
         # An initial guess for t1
-        tn = 2_000_000_000
+        tn = 1_000_000_000
         acceptance_probability = 0
 
         # Repeat guess
@@ -175,8 +195,7 @@ class optimizer:
             # test all possible swaps
             for i, k1 in enumerate(self.keyboard.lowercase[:-1]):
                 for k2 in self.keyboard.lowercase[i + 1 :]:
-                    self.keyboard.swap(k1, k2)
-                    self.get_fitness()
+                    self.swap(k1, k2)
 
                     delta = self.fitness - self.prev_fitness
 
@@ -194,6 +213,7 @@ class optimizer:
             tn = tn * (log(acceptance_probability) / log(x0))
 
         print(f"initial temperature found, t1 = {tn}")
+        initial_temp = tn
 
         return tn
 
@@ -208,10 +228,12 @@ class optimizer:
         return ceil(swaps * (log(swaps) + euler_mascheroni) + 0.5)
 
     def get_fitness(self):
-
         self.prev_fitness = self.fitness
 
-        self.fitness = int(np.sum(self.get_trigram_times() * tg_freqs))
+        # print("calculating fitness")
+        self.fitness = int(np.sum(self.update_trigram_times() * tg_freqs))
+
+        # print("done")
         # print((100_000_000 / (self.fitness / 1000 / 60)))
         # self.new_bg_scores[bg] = predicted_time * freq
         # delta = self.new_bg_scores[bg] - self.bg_scores[bg]
@@ -224,8 +246,8 @@ class optimizer:
         while stays < self.stopping_point:
             # markov chain
             for _ in range(30):
-                self.keyboard.random_swap()
-                self.get_fitness()
+                self.swap()
+
                 delta = self.fitness - self.prev_fitness
 
                 if delta < 0:
@@ -234,14 +256,15 @@ class optimizer:
 
                 # Metropolis criterion
                 if delta > 0:
+                    stays += 1
+
                     if random() < exp(-delta / self.temp):
                         self.accept()
                     else:
                         self.reject()
-                        stays += 1
 
             self.cool()
-            print(int(self.fitness))
+            print(self.fitness, f"@{tg_coverage}%")
             print(self.keyboard)
 
     def get_bg_features(self, bg):
@@ -330,110 +353,117 @@ class optimizer:
         )
 
     def get_bg_time(self, bg):
-        (
-            bg_freq,
-            bg_space1,
-            bg_space2,
-            bg_bottom2,
-            bg_home2,
-            bg_top2,
-            bg_pinky1,
-            bg_pinky2,
-            bg_ring1,
-            bg_ring2,
-            bg_middle1,
-            bg_middle2,
-            bg_index1,
-            bg_index2,
-            bg_shb,
-            bg_sfb,
-            bg_scissor,
-            bg_lsb,
-            bg_lateral,
-            bg_caps1,
-            bg_caps2,
-            bg_dx,
-            bg_dy,
-        ) = self.get_bg_features(bg)
+        if bg not in self.bg_times:
+            (
+                bg_freq,
+                bg_space1,
+                bg_space2,
+                bg_bottom2,
+                bg_home2,
+                bg_top2,
+                bg_pinky1,
+                bg_pinky2,
+                bg_ring1,
+                bg_ring2,
+                bg_middle1,
+                bg_middle2,
+                bg_index1,
+                bg_index2,
+                bg_shb,
+                bg_sfb,
+                bg_scissor,
+                bg_lsb,
+                bg_lateral,
+                bg_caps1,
+                bg_caps2,
+                bg_dx,
+                bg_dy,
+            ) = self.get_bg_features(bg)
 
-        freq_pen = (
-            bg_p[0] * np.log(np.clip(bg_freq + bg_p[1], a_min=1, a_max=None)) + bg_p[2]
-        )
+            freq_pen = (
+                bg_p[0] * np.log(np.clip(bg_freq + bg_p[1], a_min=1, a_max=None))
+                + bg_p[2]
+            )
 
-        # Row penalties
-        base_row_pen = bg_p[3] * (bg_home2 + bg_top2) + bg_p[4] * bg_bottom2
-        shb_row_pen = bg_p[6] * (bg_home2 + bg_top2) + bg_p[7] * bg_bottom2
-        alt_row_pen = bg_p[9] * (bg_home2 + bg_top2) + bg_p[10] * bg_bottom2
-        sfb_row_pen = bg_p[12] * (bg_home2 + bg_top2) + bg_p[13] * bg_bottom2
+            # Row penalties
+            base_row_pen = bg_p[3] * (bg_home2 + bg_top2) + bg_p[4] * bg_bottom2
+            shb_row_pen = bg_p[6] * (bg_home2 + bg_top2) + bg_p[7] * bg_bottom2
+            alt_row_pen = bg_p[9] * (bg_home2 + bg_top2) + bg_p[10] * bg_bottom2
+            sfb_row_pen = bg_p[12] * (bg_home2 + bg_top2) + bg_p[13] * bg_bottom2
 
-        # Finger penalties
-        sfb_finger_pen = (
-            bg_p[15] * bg_pinky2
-            + bg_p[16] * bg_ring2
-            + bg_p[17] * bg_middle2
-            + bg_p[18] * bg_index2
-        )
-        base_finger_pen = (
-            bg_p[19] * bg_pinky2
-            + bg_p[20] * bg_ring2
-            + bg_p[21] * bg_middle2
-            + bg_p[22] * bg_index2
-        )
-        shb_finger_pen = (
-            bg_p[23] * bg_pinky2
-            + bg_p[24] * bg_ring2
-            + bg_p[25] * bg_middle2
-            + bg_p[26] * bg_index2
-        )
-        alt_finger_pen = (
-            bg_p[27] * bg_pinky2
-            + bg_p[28] * bg_ring2
-            + bg_p[29] * bg_middle2
-            + bg_p[30] * bg_index2
-        )
-        shift_finger_pen1 = (
-            bg_p[31] * bg_pinky1
-            + bg_p[32] * bg_ring1
-            + bg_p[33] * bg_middle1
-            + bg_p[34] * bg_index1
-        )
-        shift_finger_pen2 = (
-            bg_p[35] * bg_pinky2
-            + bg_p[36] * bg_ring2
-            + bg_p[37] * bg_middle2
-            + bg_p[38] * bg_index2
-        )
+            # Finger penalties
+            sfb_finger_pen = (
+                bg_p[15] * bg_pinky2
+                + bg_p[16] * bg_ring2
+                + bg_p[17] * bg_middle2
+                + bg_p[18] * bg_index2
+            )
+            base_finger_pen = (
+                bg_p[19] * bg_pinky2
+                + bg_p[20] * bg_ring2
+                + bg_p[21] * bg_middle2
+                + bg_p[22] * bg_index2
+            )
+            shb_finger_pen = (
+                bg_p[23] * bg_pinky2
+                + bg_p[24] * bg_ring2
+                + bg_p[25] * bg_middle2
+                + bg_p[26] * bg_index2
+            )
+            alt_finger_pen = (
+                bg_p[27] * bg_pinky2
+                + bg_p[28] * bg_ring2
+                + bg_p[29] * bg_middle2
+                + bg_p[30] * bg_index2
+            )
+            shift_finger_pen1 = (
+                bg_p[31] * bg_pinky1
+                + bg_p[32] * bg_ring1
+                + bg_p[33] * bg_middle1
+                + bg_p[34] * bg_index1
+            )
+            shift_finger_pen2 = (
+                bg_p[35] * bg_pinky2
+                + bg_p[36] * bg_ring2
+                + bg_p[37] * bg_middle2
+                + bg_p[38] * bg_index2
+            )
 
-        # Aggregate penalties for classes
-        shb_pen = shb_finger_pen * (shb_row_pen)
-        alt_pen = alt_finger_pen * (alt_row_pen)
-        sfb_pen = sfb_finger_pen + (sfb_row_pen)
+            # Aggregate penalties for classes
+            shb_pen = shb_finger_pen * (shb_row_pen)
+            alt_pen = alt_finger_pen * (alt_row_pen)
+            sfb_pen = sfb_finger_pen + (sfb_row_pen)
 
-        # class penalties
-        base_weight = (
-            1
-            + (base_row_pen * base_finger_pen)
-            # + (bg_space2 * bg_p[39] + bg_space1 * bg_p[40])
-            + bg_p[43] * bg_lateral
-        )
-        # base_weight *= (bg_caps1 * shift_finger_pen1 + bg_p[41]) * (
-        #     bg_caps2 * shift_finger_pen2 + bg_p[42]
-        # )
-        shb_weight = (
-            (bg_shb * (1 - bg_sfb))
-            * (shb_pen)  # + bg_p[43] * bg_lsb
-            # * (bg_scissor + bg_p[34])
-            # * (bg_p[40] * bg_dy + bg_p[41])
-        )
-        # sigmoid = 1 / (1 + exp(-bg_p[35]))
-        sfb_weight = bg_sfb * sfb_pen * ((bg_dx**2 + bg_dy**2) ** 1 + bg_p[45])
-        alt_weight = (1 - bg_shb) * alt_pen
+            # class penalties
+            base_weight = (
+                1
+                + (base_row_pen * base_finger_pen)
+                # + (bg_space2 * bg_p[39] + bg_space1 * bg_p[40])
+                + bg_p[43] * bg_lateral
+            )
+            # base_weight *= (bg_caps1 * shift_finger_pen1 + bg_p[41]) * (
+            #     bg_caps2 * shift_finger_pen2 + bg_p[42]
+            # )
+            shb_weight = (
+                (bg_shb * (1 - bg_sfb))
+                * (shb_pen)  # + bg_p[43] * bg_lsb
+                # * (bg_scissor + bg_p[34])
+                # * (bg_p[40] * bg_dy + bg_p[41])
+            )
+            # sigmoid = 1 / (1 + exp(-bg_p[35]))
+            sfb_weight = bg_sfb * sfb_pen * ((bg_dx**2 + bg_dy**2) ** 1 + bg_p[45])
+            alt_weight = (1 - bg_shb) * alt_pen
 
-        return freq_pen * (base_weight + alt_weight + shb_weight + sfb_weight)
+            self.bg_times[bg] = freq_pen * (
+                base_weight + alt_weight + shb_weight + sfb_weight
+            )
 
-    def get_tg_features(self):
+        return self.bg_times[bg]
 
-        for i in range(data_size):
+    def update_tg_features(self):
+        self.bg_times = {}
+
+        for i in self.affected_indices:
             tg = trigrams[i]
 
             # extracting position
@@ -491,7 +521,7 @@ class optimizer:
             sg_sfs,
         )
 
-    def get_trigram_times(self):
+    def update_trigram_times(self):
         (
             tg_bg1_prediction,
             tg_bg2_prediction,
@@ -505,7 +535,7 @@ class optimizer:
             sg_middle,
             sg_index,
             sg_sfs,
-        ) = self.get_tg_features()
+        ) = self.update_tg_features()
 
         # freq_pen = tg_p[0] * np.log(tg_freqs + tg_p[1]) + tg_p[2]
 
@@ -526,7 +556,7 @@ class optimizer:
             tg_bg1_prediction
             + tg_bg2_prediction
             + sfs_weight
-            + tg_p[10]
+            # + tg_p[10]
             # + (tg_p[10] * tg_redirect)
             # + (tg_p[11] * tg_bad)
         )
@@ -535,7 +565,7 @@ class optimizer:
 best_keeb = None
 best_score = float("inf")
 
-for _ in range(5):
+for _ in range(10):
     o = optimizer()
     o.optimize()
 
@@ -545,6 +575,11 @@ for _ in range(5):
         best_score = o.fitness
         print("new best")
         best_keeb = o.keyboard
+
+        with open("logfile.txt", "a") as f:
+            # Write to the file
+            f.write(f"{best_score}\n")
+            f.write(repr(best_keeb) + "\n")
 
 print("best score")
 print(best_keeb)
