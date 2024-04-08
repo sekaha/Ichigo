@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title>Color Palette Generator</title>
+</head>
+
+<body>
+    <div class="color-inputs">
+        <div class="color-input-item">
+            <input type="color" id="color1" value="#ff0044">
+        </div>
+        <div class="color-input-item">
+            <input type="color" id="color2" value="#1133f0">
+        </div>
+        <div class="color-input-item">
+            <input type="color" id="color3" value="#ff1111">
+        </div>
+        <div class="palette-count">
+            <input type="number" id="palette-count-input" name="quantity" min="2" max="99" value="5">
+        </div>
+        <div class="saturation-boost">
+            <input id="saturation-boost" type="range" min="0" max="200" value="100">
+        </div>
+        <div class="palette-type">
+            <select id="palette-type">
+                <option value="sequential_direct" selected>Sequential Direct</option>
+                <option value="sequential_hue">Sequential Hue</option>
+                <option value="bezier_direct">Bezier Direct</option>
+                <option value="bezier_hue">Bezier Hue</option>
+                <option value="diverging">Diverging</option>
+                <!--<option value="triad">Triad</option>-->
+                <option value="spectrum">Spectrum</option>
+            </select>
+        </div>
+        <div class="color-blindness">
+            <select id="color-blindness">
+                <option value="none" selected>none</option>
+                <option value="deuteranopia">Deuteranopia</option>
+                <option value="protanopia">Protanopia</option>
+                <option value="tritanopia">Tritanopia</option>
+            </select>
+        </div>
+
+    </div>
+    <div class="palette" id="palette"></div>
+    <script src="chroma.js"></script>
+    <script src="colors.js"></script>
+    <script src="colorblind.js"></script>
+    <script src="blinder.js"></script>
+</body>
+
+</html>

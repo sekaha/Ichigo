@@ -1,0 +1,93 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@500&display=swap");
+
+html,
+body {
+    height: 100%;
+    font-family: "Rubik", sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+.color-inputs {
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    align-items: center;
+}
+
+.color-inputs .color-input-item {
+    margin: 4px;
+}
+
+.color-inputs .color-input-item input {
+    border: 0;
+    padding: 0;
+    outline: 0;
+    background-color: transparent;
+    height: 40px;
+    width: 40px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.color-inputs .color-input-item input:focus {
+    outline: 0;
+}
+
+.color-inputs .palette-count select {
+    height: 34px;
+    margin: 4px;
+}
+
+.palette {
+    display: -webkit-box;
+    display: flex;
+    flex-wrap: nowrap;
+    height: calc(100% - 48px);
+}
+
+.palette .panel {
+    color: var(--text-color);
+    background-color: var(--palette-color);
+    height: 300px;
+    width: 150px;
+    -webkit-box-flex: 1;
+    flex: 1;
+    margin: 0px;
+    height: 100%;
+    position: relative;
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    align-items: center;
+    overflow: hidden;
+    -webkit-transition: all ease 0.25s;
+    transition: all ease 0.25s;
+}
+
+.palette .panel:hover {
+    -webkit-box-flex: 2;
+    flex: 2;
+}
+
+.palette .color .colorDisplay {
+    position: absolute;
+    display: -webkit-inline-box;
+    display: inline-flex;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    left: 0;
+    right: 0;
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    align-items: center;
+}

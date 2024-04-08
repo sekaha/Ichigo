@@ -1,0 +1,8 @@
+typingrecords/
+output/
+__pycache__
+nstrokes/
+ngrams/
+wpm_metadata.txt
+session_data/
+*.tsv
