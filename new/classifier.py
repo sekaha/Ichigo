@@ -58,7 +58,14 @@ class keyboard:
         self.swap(*self.swap_pair)
 
     def random_swap(self):
-        self.swap(*sample(self.lowercase, 2))
+        while True:
+            swaps = sample(self.lowercase, 2)
+
+            # if all([s in "wertyuiopasdfghjklvbnm" for s in swaps]) or all(
+            #    [s in ",.'-" for s in swaps]
+            # ):
+            self.swap(*swaps)
+            return
 
     def swap(self, k1, k2):
         self.swap_pair = (k1, k2)
