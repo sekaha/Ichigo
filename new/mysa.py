@@ -168,34 +168,40 @@ class optimizer:
         l2 = "yrdcgkhua.sntpfmleoijxqbwvz-',QWERTYUIOPASDFGHJKL\"ZXCVBNM<>_"
 
         for k1, k2 in ((l1, l2), (l2, l1)):
-            print()
-            print(k2)
             self.keyboard = keyboard(k1)
 
-            t1 = np.copy(self.update_trigram_times())
+            t1 = self.update_trigram_times() * tg_freqs
 
             self.keyboard = keyboard(k2)
 
-            t2 = self.update_trigram_times()
+            t2 = self.update_trigram_times() * tg_freqs
 
             self.get_fitness()
+            print("------------------------------------")
+            print(self.keyboard)
             print(self.fitness)
+            print()
 
-            for i in list(np.where(t1 != t2)[0])[:3]:
+            total = 0
+
+            for i in list(np.argsort(-np.abs(t1 - t2))[np.where(t1 != t2)])[:10]:
+                bg_t = int(tg_bg1_prediction[i]) + int(tg_bg2_prediction[i])
                 print(
                     trigrams[i],
-                    int(tg_bg1_prediction[i]),
-                    int(tg_bg2_prediction[i]),
+                    f"{bg_t} = {int(tg_bg1_prediction[i])} + {int(tg_bg2_prediction[i])}",
                 )
 
-                print(
-                    trigrams[i][:2],
-                    *map(int, self.get_bg_features(trigrams[i][:2])[14:]),
-                )
-                print(
-                    trigrams[i][1:],
-                    *map(int, self.get_bg_features(trigrams[i][1:])[14:]),
-                )
+                total += bg_t
+
+                # print(
+                #     trigrams[i][:2],
+                #     *map(int, self.get_bg_features(trigrams[i][:2])[14:]),
+                # )
+                # print(
+                #     trigrams[i][1:],
+                #     *map(int, self.get_bg_features(trigrams[i][1:])[14:]),
+                # )
+            print(total)
 
         print(1 / 0)
 
